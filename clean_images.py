@@ -1,4 +1,3 @@
-from importlib.resources import path
 from PIL import Image
 import os
 
@@ -14,17 +13,17 @@ def clean_image_data(final_size, im):
 
 if __name__ == '__main__':
     # Create a directory called 'cleaned_images' if it doesn't exist
-    if os.path.isdir("./cleaned_images"):
+    if os.path.isdir("./data/cleaned_images"):
         pass
     else:
-        os.mkdir("./cleaned_images")
+        os.mkdir("./data/cleaned_images")
     # Set the path, directory, and final size of the images
-    path = './data/images_fb/images/'
+    path = './data/images/'
     dirs = os.listdir(path)
     final_size = 512
-    # Loops through all the files in the directory and run the clean_image_data()
+    # Loops through all the files in the directory and runs the clean_image_data()
     # function on each. The cleaned images are saved in the cleaned_images directory
     for n, item in enumerate(dirs, 1):
         im = Image.open(path + item)
         new_im = clean_image_data(final_size, im)
-        new_im.save(f'./cleaned_images/{n}_resized.jpg')
+        new_im.save(f'./data/cleaned_images/{n}_resized.jpg')
