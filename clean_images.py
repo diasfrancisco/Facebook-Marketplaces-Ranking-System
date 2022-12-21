@@ -23,7 +23,7 @@ if __name__ == '__main__':
     final_size = 512
     # Loops through all the files in the directory and runs the clean_image_data()
     # function on each. The cleaned images are saved in the cleaned_images directory
-    for n, item in enumerate(dirs, 1):
+    for item in dirs:
         im = Image.open(path + item)
         new_im = clean_image_data(final_size, im)
-        new_im.save(f'./data/cleaned_images/{n}_resized.jpg')
+        new_im.save(f'./data/cleaned_images/{item}')
