@@ -31,5 +31,5 @@ class ImageDataset(Dataset):
     
 image_dataset = ImageDataset(img_dir="./data/cleaned_images/",
                              transform=None)
-random_sample = image_dataset.__getitem__(idx=113)
-print(random_sample)
+
+train_loader = DataLoader(image_dataset, batch_size=64, shuffle=True)
