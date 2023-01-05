@@ -1,6 +1,7 @@
 import os
 import torch
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from PIL import Image
 from torchvision import transforms
@@ -53,15 +54,16 @@ class CNN(torch.nn.Module):
         return self.resnet50(features.float())
 
 def train(cnn_model, epochs=20):
+    min_valid_loss = np.inf
     batch_idx = 0
     # Sets the optimiser and scheduler to be used for the model
     optimiser = torch.optim.SGD(cnn_model.parameters() ,lr=0.1)
-    scheduler = OneCycleLR(optimiser, max_lr=0.1, steps_per_epoch=len(train_dataloader), epochs=epochs)
+    scheduler = OneCycleLR(optimiser, max_lr=0.02, steps_per_epoch=len(train_dataloader), epochs=epochs)
     # Creates a instance of the summary writer used by TensorBoard
     writer = SummaryWriter()
     
     for epoch in range(epochs):
-        print("\nCurrent Epoch:", f'{epoch}/{epochs}')
+        print("\nCurrent Epoch:", f'{epoch+1}/{epochs}')
         
         running_loss = 0
         correct = 0
@@ -91,26 +93,36 @@ def train(cnn_model, epochs=20):
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
         
-        # Calculates the training loss and the accuracy of the model at each epoch    
+        # Calculate the training loss and the accuracy of the model at each epoch    
         train_loss=running_loss/len(train_dataloader)
         accuracy=100.*correct/total
         
-        print(cnn_model.state_dict())
-        
+        # Saves all models at each epoch
         torch.save(cnn_model.state_dict(), f'./model_evaluation/{timestamp}/weights/epoch{epoch}_weights.pt')
         with open(f'./model_evaluation/{timestamp}/weights/epoch{epoch}_loss_and_acc.txt', 'w') as f:
             f.writelines(['Train Loss: %.3f'%train_loss, '\nAccuracy: %.3f'%accuracy])
+            
+        valid_loss = 0
         
-        print('Train Loss: %.3f | Accuracy: %.3f'%(train_loss, accuracy))
-
+        for batch in validation_dataloader:
+            # Unpacks the batch with the features and labels
+            features, labels = batch
+            features, labels = features.to(device), labels.to(device)
+            # Makes a prediction on the features using the CNN model
+            prediction = cnn_model(features)
+            # Calculates the loss using the cross entropy function
+            loss = F.cross_entropy(prediction, labels.long())
+            valid_loss = loss.item() * features.size(0)
+        
+        print('Train Loss: %.3f | Accuracy: %.3f | Validation Loss: %.3f'%(train_loss, accuracy, valid_loss/len(validation_dataloader)))
+        
+        if min_valid_loss > valid_loss:
+            min_valid_loss = valid_loss
+            torch.save(cnn_model.state_dict(), f'./model_evaluation/{timestamp}/min_valid_loss_model.pt')
+            
             
 if __name__=="__main__":
     timestamp = datetime.now().strftime('%d_%b_%Y_%H_%M_%S_%f')
-    
-    if os.path.isdir('./model_evaluation'):
-        os.makedirs(f'./model_evaluation/{timestamp}/weights', exist_ok=True)
-    else:
-        os.makedirs(f'./model_evaluation/{timestamp}/weights', exist_ok=True)
     
     # Sets the device to either cpu or gpu
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -118,14 +130,18 @@ if __name__=="__main__":
     # Initialises an instance of the custom image dataset
     image_dataset = ImageDataset(img_dir="./data/cleaned_images/",
                                 transform=True)
-    
     # Splits the dataset into a training, validation and testing dataset
     train_dataset, validation_dataset, test_dataset = random_split(image_dataset, [0.6, 0.2, 0.2])
-    
-    # Loads the training, validation and testing data in shuffled minibatches
-    train_dataloader = DataLoader(train_dataset, batch_size=12, shuffle=True)
-    validation_dataloader = DataLoader(validation_dataset, batch_size=12, shuffle=True)
-    test_dataloader = DataLoader(test_dataset, batch_size=12, shuffle=True)
+
+    if os.path.isdir('./model_evaluation'):
+        os.makedirs(f'./model_evaluation/{timestamp}/weights', exist_ok=True)
+    else:
+        os.makedirs(f'./model_evaluation/{timestamp}/weights', exist_ok=True)
+
+    # Loads the training, validation and testing data in shuffled "minibatches"
+    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
+    validation_dataloader = DataLoader(validation_dataset, batch_size=4, shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=4, shuffle=True)
     
     # Initialises an instance of the model on the device set
     cnn_model = CNN().to(device=device)
@@ -136,4 +152,4 @@ if __name__=="__main__":
     train(cnn_model)
     
     # Save my model's weights and biases
-    torch.save(cnn_model.state_dict(), f'./model_evaluation/{timestamp}/model.pt')
+    torch.save(cnn_model.state_dict(), f'./model_evaluation/{timestamp}/end_model.pt')
