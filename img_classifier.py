@@ -65,20 +65,21 @@ def train(cnn_model, epochs=20):
     for epoch in range(epochs):
         print("\nCurrent Epoch:", f'{epoch+1}/{epochs}')
         
-        running_loss = 0
-        correct = 0
-        total = 0
+        cnn_model.train()
+        
+        running_train_loss = 0
+        correct_train = 0
         
         for batch in train_dataloader:
             # Clears the gradients
             optimiser.zero_grad()
             # Unpacks the batch with the features and labels
-            features, labels = batch
-            features, labels = features.to(device), labels.to(device)
+            X_train, y_train = batch
+            X_train, y_train = X_train.to(device), y_train.to(device)
             # Makes a prediction on the features using the CNN model
-            prediction = cnn_model(features)
+            prediction = cnn_model(X_train)
             # Calculates the loss using the cross entropy function
-            loss = F.cross_entropy(prediction, labels.long())
+            loss = F.cross_entropy(prediction, y_train.long())
             # Differentiates the loss wrt the model parameters
             loss.backward()
             # Optimisation step
@@ -88,37 +89,64 @@ def train(cnn_model, epochs=20):
             writer.add_scalar('loss', loss.item(), batch_idx)
             batch_idx += 1
             # Calculates the training loss and the accuracy at each epoch
-            running_loss += loss.item()
-            _, predicted = prediction.max(1)
-            total += labels.size(0)
-            correct += predicted.eq(labels).sum().item()
+            running_train_loss += loss.item()
+            _, predicted = torch.max(prediction, dim=1)
+            correct_train += torch.sum(predicted == y_train)
         
-        # Calculate the training loss and the accuracy of the model at each epoch    
-        train_loss=running_loss/len(train_dataloader)
-        accuracy=100.*correct/total
+        # Calculate the training loss and accuracy of the model at each epoch    
+        train_loss = running_train_loss/len(train_dataloader)
+        train_acc = correct_train.float()/len(train_dataset)
+        
+        print('Train Loss: %.3f | Train Accuracy: %.3f'%(train_loss, train_acc*100))
         
         # Saves all models at each epoch
         torch.save(cnn_model.state_dict(), f'./model_evaluation/{timestamp}/weights/epoch{epoch}_weights.pt')
         with open(f'./model_evaluation/{timestamp}/weights/epoch{epoch}_loss_and_acc.txt', 'w') as f:
-            f.writelines(['Train Loss: %.3f'%train_loss, '\nAccuracy: %.3f'%accuracy])
-            
-        valid_loss = 0
+            f.writelines(['Train Loss: %.3f'%train_loss, '\nTrain Accuracy: %.3f'%train_acc])
+
+        cnn_model.eval()
+        
+        running_val_loss = 0
+        correct_val = 0
         
         for batch in validation_dataloader:
             # Unpacks the batch with the features and labels
-            features, labels = batch
-            features, labels = features.to(device), labels.to(device)
+            X_val, y_val = batch
+            X_val, y_val = X_val.to(device), y_val.to(device)
             # Makes a prediction on the features using the CNN model
-            prediction = cnn_model(features)
+            prediction = cnn_model(X_val)
             # Calculates the loss using the cross entropy function
-            loss = F.cross_entropy(prediction, labels.long())
-            valid_loss = loss.item() * features.size(0)
+            loss = F.cross_entropy(prediction, y_val.long())
+            running_val_loss += loss.item()
+            _, predicted = torch.max(prediction, dim=1)
+            correct_val += torch.sum(predicted == y_val)
         
-        print('Train Loss: %.3f | Accuracy: %.3f | Validation Loss: %.3f'%(train_loss, accuracy, valid_loss/len(validation_dataloader)))
+        # Calculate the validation loss and accuracy of the model at each epoch    
+        val_loss = running_val_loss/len(validation_dataloader)
+        val_acc = correct_val.float()/len(validation_dataset)
         
-        if min_valid_loss > valid_loss:
-            min_valid_loss = valid_loss
+        print('Validation Loss: %.3f | Validation Accuracy: %.3f'%(val_loss, val_acc*100))
+        
+        if min_valid_loss > val_loss:
+            min_valid_loss = val_loss
             torch.save(cnn_model.state_dict(), f'./model_evaluation/{timestamp}/min_valid_loss_model.pt')
+        
+        running_test_loss = 0
+        test_correct = 0
+        
+        for batch in test_dataloader:
+            X_test, y_test = batch
+            X_test, y_test = X_test.to(device), y_test.to(device)
+            prediction = cnn_model(X_test)
+            loss = F.cross_entropy(prediction, y_test.long())
+            running_test_loss += loss.item()
+            _, predicted = torch.max(prediction, dim=1)
+            test_correct += torch.sum(predicted == y_test)
+        
+        test_loss = running_val_loss/len(test_dataloader)
+        test_acc = test_correct.float()/len(test_dataset)
+        
+        print('Test Loss: %.3f | Test Accuracy: %.3f'%(test_loss, test_acc*100))
             
             
 if __name__=="__main__":
