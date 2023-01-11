@@ -7,3 +7,18 @@ The data was cleaned using the `pandas` and `PILLOW` libraries. The csv file was
 The image dataset also needed to be cleaned to be used for analysis using the `PILLOW` library. The images are set a size of 512px x 512px and rescaled to the new size.
 
 ---
+## **Milestone 2**
+---
+
+
+---
+## **Milestone 3**
+---
+
+
+---
+## **Milestone 4**
+---
+
+
+---
