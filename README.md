@@ -22,3 +22,9 @@ The image dataset also needed to be cleaned to be used for analysis using the `P
 
 
 ---
+
+## **Notes**
+---
+Only 12604 images have been labelled out of the 12668 raw images
+There are 64 images that are not listed in Images.csv
+There are 7051 unique items in the Images.csv file but 7155 unique items in the Products.csv file
