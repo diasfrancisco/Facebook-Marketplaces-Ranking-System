@@ -8,6 +8,7 @@ from torch.optim.lr_scheduler import OneCycleLR
 import config
 from dataset import ImageDataset
 from image_cnn import CNN
+from utils import create_dirs
 
 def train(
     cnn_model,
@@ -108,6 +109,7 @@ def train(
     cnn_model.train()
 
 def main():
+    create_dirs()
     # Initialises an instance of the custom image dataset
     image_dataset = ImageDataset(img_dir="./data/cleaned_images/", transform=True)
     
