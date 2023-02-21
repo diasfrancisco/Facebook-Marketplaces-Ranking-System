@@ -1,9 +1,9 @@
+import random
 import torch
 import numpy as np
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
-from torch.utils.data import Dataset, DataLoader, random_split
-from torch.optim.lr_scheduler import OneCycleLR
+from torch.utils.data import DataLoader, random_split
 
 import config
 from dataset import ImageDataset
@@ -19,10 +19,8 @@ def train(
     validation_dataset,
     test_dataset,
     optimiser,
-    scheduler,
     writer,
     min_valid_loss,
-    batch_idx,
     epoch
 ):
     running_train_loss = 0
@@ -42,10 +40,8 @@ def train(
         loss.backward()
         # Optimisation step
         optimiser.step()
-        scheduler.step()
         # Writes the loss against the batch number in TensorBoard
-        writer.add_scalar('loss', loss.item(), batch_idx)
-        batch_idx += 1
+        writer.add_scalar('loss', loss.item(), epoch)
         # Calculates the training loss and the accuracy at each epoch
         running_train_loss += loss.item()
         _, predicted = torch.max(prediction, dim=1)
@@ -110,6 +106,14 @@ def train(
 
 def main():
     create_dirs()
+    
+    # Set seed for reproducibility
+    random.seed(config.SEED)
+    np.random.seed(config.SEED)
+    torch.manual_seed(config.SEED)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    
     # Initialises an instance of the custom image dataset
     image_dataset = ImageDataset(img_dir="./data/cleaned_images/", transform=True)
     
@@ -128,10 +132,9 @@ def main():
     torch.cuda.empty_cache()
     
     min_valid_loss = np.inf
-    batch_idx = 0
     # Sets the optimiser and scheduler to be used for the model
-    optimiser = torch.optim.SGD(cnn_model.parameters() ,lr=0.1)
-    scheduler = OneCycleLR(optimiser, max_lr=0.02, steps_per_epoch=len(train_dataloader), epochs=config.EPOCHS)
+    optimiser = torch.optim.SGD(cnn_model.parameters() ,lr=0.05)
+    # scheduler = OneCycleLR(optimiser, max_lr=0.02, steps_per_epoch=len(train_dataloader), epochs=config.EPOCHS)
     
     # Creates a instance of the summary writer used by TensorBoard
     writer = SummaryWriter()
@@ -147,10 +150,8 @@ def main():
               validation_dataset,
               test_dataset,
               optimiser,
-              scheduler,
               writer,
               min_valid_loss,
-              batch_idx,
               epoch
         )
     

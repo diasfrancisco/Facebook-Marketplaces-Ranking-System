@@ -11,6 +11,12 @@ class CNN(torch.nn.Module):
         # Initialise parameters
         super().__init__()
         self.resnet50 = torch.hub.load('NVIDIA/DeepLearningExamples:torchhub', 'nvidia_resnet50', pretrained=True)
+
+        # for counter, child in enumerate(self.resnet50.children()):
+        #     if counter < 5:
+        #         for param in child.parameters():
+        #             param.requires_grad = False # Freeze layers 1-5
+                    
         self.resnet50.fc = torch.nn.Linear(2048, 13, bias=True)
     
     def forward(self, features):
