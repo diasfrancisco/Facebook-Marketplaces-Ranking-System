@@ -115,7 +115,7 @@ def main():
     torch.backends.cudnn.benchmark = False
     
     # Initialises an instance of the custom image dataset
-    image_dataset = ImageDataset(img_dir="./data/cleaned_images/", transform=True)
+    image_dataset = ImageDataset(img_dir="./data/cleaned_images/", transform=True, ft_extraction=False)
     
     # Splits the dataset into a training, validation and testing dataset
     train_dataset, validation_dataset, test_dataset = random_split(image_dataset, [0.6, 0.2, 0.2])

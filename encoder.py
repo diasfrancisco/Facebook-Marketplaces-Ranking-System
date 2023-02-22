@@ -26,11 +26,9 @@ def create_labels_for_categories():
         else:
             all_categories.append(main_category)
             
-    catergories_df = pd.DataFrame(all_categories)
-            
     # Creates an encoder by converting the list to a DataFrame and then to a csv
     all_cat_df = pd.DataFrame(all_categories, columns=['Category'])
-    df_to_csv = all_cat_df.to_csv("./data/Labels.csv", quoting=csv.QUOTE_NONNUMERIC)
+    all_cat_df.to_csv("./data/Labels.csv", quoting=csv.QUOTE_NONNUMERIC)
 
 def label_each_product():
     # Creates a file called 'LabelledImages.csv' if it doesn't already exist

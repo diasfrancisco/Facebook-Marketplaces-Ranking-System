@@ -2,3 +2,6 @@ data/
 cleaned_images/
 model_evaluation/
 runs/
+__pycache__/
+sandbox.ipynb
+image_embeddings.json
