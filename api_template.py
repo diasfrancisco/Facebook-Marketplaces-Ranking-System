@@ -1,8 +1,12 @@
-from fastapi import FastAPI, HTTPException, UploadFile
-from image_processor import img_loader
-from image_cnn import CNN, FtCNN
-import pandas as pd
 import torch
+import faiss
+import pandas as pd
+from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+
+from image_cnn import CNN, FtCNN
+from image_processor import img_loader
+
 
 api = FastAPI()
 
@@ -50,10 +54,22 @@ def ranking_sys(user_input: UploadFile):
     
     file_contents = user_input.file.read()
     img = img_loader(file_contents)
+    
     emb_store = torch.load('image_embeddings.json')
+    index = faiss.IndexFlatL2(1000)
+    for k, v in emb_store.items():
+        v_np = v.cpu().detach().numpy()
+        faiss.normalize_L2(v_np)
+        index.add(v_np)
     
     ft_model = load_model(fp='./final_models/ft_model.pt', model='ft')
     fts = ft_model(img)
-    emb = fts[0]
+    emb = fts.cpu().detach().numpy()
+    faiss.normalize_L2(emb)
+
+    distances, ann = index.search(emb, k=100)
+    idxs = ann[0].tolist()
+    img_file_names = [list(emb_store)[idx] for idx in idxs]
     
-    return emb.shape
+    for file in img_file_names:
+        return FileResponse(f'data/images/{file}.jpg')

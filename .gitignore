@@ -4,4 +4,5 @@ model_evaluation/
 runs/
 __pycache__/
 sandbox.ipynb
+final_models/
 image_embeddings.json
