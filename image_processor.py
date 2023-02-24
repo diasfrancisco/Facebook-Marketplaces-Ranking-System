@@ -1,7 +1,8 @@
-from torchvision import transforms
-from clean_data import clean_image_data
-from PIL import Image
 import io
+from PIL import Image
+from torchvision import transforms
+
+from clean_data import clean_image_data
 
 
 def img_loader(user_input):

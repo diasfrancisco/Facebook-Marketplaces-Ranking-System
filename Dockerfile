@@ -16,5 +16,7 @@ COPY ./final_models/ ./final_models/
 COPY ./image_embeddings.json ./image_embeddings.json
 COPY ./image_cnn.py ./image_cnn.py
 COPY ./image_processor.py ./image_processor.py
+COPY ./clean_data.py ./clean_data.py
+COPY ./config.py ./config.py
 
-CMD ["uvicorn", "api_template:api", "--host", "0.0.0.0", "--port", "80"]
+ENTRYPOINT ["uvicorn", "api_template:api", "--host", "0.0.0.0", "--port", "80"]
