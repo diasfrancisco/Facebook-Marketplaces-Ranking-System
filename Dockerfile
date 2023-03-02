@@ -18,5 +18,6 @@ COPY ./image_cnn.py ./image_cnn.py
 COPY ./image_processor.py ./image_processor.py
 COPY ./clean_data.py ./clean_data.py
 COPY ./config.py ./config.py
+COPY ./data/Labels.csv ./data/Labels.csv
 
 ENTRYPOINT ["uvicorn", "api_template:api", "--host", "0.0.0.0", "--port", "80"]

@@ -15,7 +15,7 @@ def load_model(fp: str, model: str):
         model = CNN()
     else:
         model = FtCNN()
-    checkpoint = torch.load(fp)
+    checkpoint = torch.load(fp, map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint)
     
     return model.eval()
@@ -55,7 +55,7 @@ def ranking_sys(user_input: UploadFile):
     file_contents = user_input.file.read()
     img = img_loader(file_contents)
     
-    emb_store = torch.load('image_embeddings.json')
+    emb_store = torch.load('image_embeddings.json', map_location=torch.device('cpu'))
     index = faiss.IndexFlatL2(1000)
     for k, v in emb_store.items():
         v_np = v.cpu().detach().numpy()

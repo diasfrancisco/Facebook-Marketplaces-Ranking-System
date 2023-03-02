@@ -1,0 +1,9 @@
+services:
+  api:
+    image: diasfrancisco/fbapi:latest
+    ports:
+      - '80:80'
+
+volumes:
+  img-db:
+    
